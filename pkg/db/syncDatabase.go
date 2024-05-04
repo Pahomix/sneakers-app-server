@@ -11,4 +11,6 @@ func SyncDatabase() {
 	Db.AutoMigrate(&models.Review{})
 	Db.AutoMigrate(&models.Order{})
 	Db.AutoMigrate(&models.PurchaseHistory{})
+	Db.AutoMigrate(&models.Category{})
+	Db.AutoMigrate(&models.CartItem{})
 }

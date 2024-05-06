@@ -54,3 +54,16 @@ func UpdateSizeHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, size)
 }
+
+func DeleteSizeHandler(c *gin.Context) {
+	var size models.Size
+	if err := db.Db.First(&size, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if err := db.Db.Delete(&size).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "size deleted successfully"})
+}

@@ -54,3 +54,16 @@ func UpdateSneakerHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, sneaker)
 }
+
+func DeleteSneakerHandler(c *gin.Context) {
+	var sneaker models.Sneaker
+	if err := db.Db.First(&sneaker, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if err := db.Db.Delete(&sneaker).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "sneaker deleted successfully"})
+}

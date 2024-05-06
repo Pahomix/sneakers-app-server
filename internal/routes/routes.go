@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"sneakers-app/internal/handlers/auth"
+	"sneakers-app/internal/handlers/sneakers"
 	"sneakers-app/internal/handlers/user"
 )
 
@@ -17,5 +18,14 @@ func InitRoutes(routes *gin.Engine) {
 		userRoutes.POST("/", auth.RequireAuth, user.CreateUser)
 		userRoutes.PUT("/:id", auth.RequireAuth, user.UpdateUser)
 		userRoutes.DELETE("/:id", auth.RequireAuth, user.DeleteUser)
+	}
+
+	userRoutes = routes.Group("/sneakers")
+	{
+		userRoutes.GET("/", sneakers.GetSneakersHandler)
+		userRoutes.GET("/:id", sneakers.GetSneakerHandler)
+		userRoutes.POST("/", sneakers.CreateSneakerHandler)
+		userRoutes.PUT("/:id", sneakers.UpdateSneakerHandler)
+		userRoutes.DELETE("/:id", sneakers.DeleteSneakerHandler)
 	}
 }

@@ -24,28 +24,28 @@ func InitRoutes(routes *gin.Engine) {
 
 	userRoutes = routes.Group("/sneakers")
 	{
-		userRoutes.GET("/", sneakers.GetSneakersHandler)
-		userRoutes.GET("/:id", sneakers.GetSneakerHandler)
-		userRoutes.POST("/", sneakers.CreateSneakerHandler)
-		userRoutes.PUT("/:id", sneakers.UpdateSneakerHandler)
-		userRoutes.DELETE("/:id", sneakers.DeleteSneakerHandler)
+		userRoutes.GET("/", auth.RequireAuth, sneakers.GetSneakersHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, sneakers.GetSneakerHandler)
+		userRoutes.POST("/", auth.RequireAuth, sneakers.CreateSneakerHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, sneakers.UpdateSneakerHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, sneakers.DeleteSneakerHandler)
 	}
 
 	userRoutes = routes.Group("/reviews")
 	{
-		userRoutes.GET("/", review.GetReviewsHandler)
-		userRoutes.GET("/:id", review.GetReviewHandler)
-		userRoutes.POST("/", review.CreateReviewHandler)
-		userRoutes.PUT("/:id", review.UpdateReviewHandler)
-		userRoutes.DELETE("/:id", review.DeleteReviewHandler)
+		userRoutes.GET("/", auth.RequireAuth, review.GetReviewsHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, review.GetReviewHandler)
+		userRoutes.POST("/", auth.RequireAuth, review.CreateReviewHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, review.UpdateReviewHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, review.DeleteReviewHandler)
 	}
 
 	userRoutes = routes.Group("/sizes")
 	{
-		userRoutes.GET("/", size.GetSizesHandler)
-		userRoutes.GET("/:id", size.GetSizeHandler)
-		userRoutes.POST("/", size.CreateSizeHandler)
-		userRoutes.PUT("/:id", size.UpdateSizeHandler)
-		userRoutes.DELETE("/:id", size.DeleteSizeHandler)
+		userRoutes.GET("/", auth.RequireAuth, size.GetSizesHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, size.GetSizeHandler)
+		userRoutes.POST("/", auth.RequireAuth, size.CreateSizeHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, size.UpdateSizeHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, size.DeleteSizeHandler)
 	}
 }

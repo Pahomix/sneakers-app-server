@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -12,32 +13,41 @@ import (
 )
 
 func RegisterHandler(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var body struct {
+		Username string
+		Email    string
+		Password string
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := isUsernameUnique(user.Username); err != nil {
+	if err := isUsernameUnique(body.Username); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := isEmailUnique(user.Email); err != nil {
+	if err := isEmailUnique(body.Email); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Println("_____________", body)
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to hash password"})
 		return
 	}
 
-	user.Password = string(hashedPassword)
+	body.Password = string(hashedPassword)
 
-	if user.Role == "" {
-		user.Role = "client"
+	user := models.User{
+		Username: body.Username,
+		Email:    body.Email,
+		Password: body.Password,
+		Role:     "client",
 	}
 
 	if err := db.Db.Create(&user).Error; err != nil {
@@ -45,12 +55,12 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "user created successfully", "details": user})
+	c.JSON(http.StatusOK, gin.H{"message": "user created successfully"})
 }
 
 func isUsernameUnique(username string) error {
 	var existingUser models.User
-	if err := db.Db.Where("username = ?", username).First(&existingUser).Error; err == nil {
+	if err := db.Db.First(&existingUser, "username = ?", username).Error; err == nil {
 		return err
 	}
 	return nil
@@ -58,27 +68,34 @@ func isUsernameUnique(username string) error {
 
 func isEmailUnique(email string) error {
 	var existingUser models.User
-	if err := db.Db.Where("email = ?", email).First(&existingUser).Error; err == nil {
+	if err := db.Db.First(&existingUser, "email = ?", email).Error; err == nil {
 		return err
 	}
 	return nil
 }
 
 func LoginHandler(c *gin.Context) {
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var body struct {
+		Username string
+		Password string
+	}
+
+	if err := c.Bind(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var existingUser models.User
-	if err := db.Db.Where("username = ?", user.Username).First(&existingUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+	if err := db.Db.First(&existingUser, "username = ?", body.Username).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password", "details": err.Error()})
 		return
 	}
+	fmt.Println(body.Password)
+	fmt.Println(existingUser.Password)
+	fmt.Println(existingUser.Email)
 
-	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(body.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password", "details": err.Error()})
 		return
 	}
 
@@ -99,5 +116,5 @@ func LoginHandler(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("Authorization", tokenString, 3600*24*30, "/", "localhost", false, true)
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{"role": existingUser.Role, "token": tokenString, "message": "user logged in successfully"})
 }

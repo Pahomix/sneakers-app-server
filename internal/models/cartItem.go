@@ -3,12 +3,11 @@ package models
 import "gorm.io/gorm"
 
 type CartItem struct {
-	ID         uint            `gorm:"primaryKey" json:"id"`
-	UserID     uint            `gorm:"not null" json:"user_id"`
-	Quantity   uint            `gorm:"not null" json:"quantity"`
-	TotalPrice float64         `gorm:"not null" json:"total_price"`
-	Sneakers   []Sneaker       `gorm:"many2many:cart_item_sneakers;not null" json:"sneakers"`
-	DeletedAt  *gorm.DeletedAt `gorm:"index" json:"-"`
+	gorm.Model
+	UserID     uint      `gorm:"not null" json:"user_id"`
+	Quantity   uint      `gorm:"not null" json:"quantity"`
+	TotalPrice float64   `gorm:"not null" json:"total_price"`
+	Sneakers   []Sneaker `gorm:"many2many:cart_item_sneakers;not null" json:"sneakers"`
 }
 
 func (c *CartItem) AfterSave(tx *gorm.DB) (err error) {

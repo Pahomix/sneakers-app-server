@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/sneakers-app</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="sneakers_store@frankfurt-postgres.render.com" uuid="1bc0cf87-a90d-4a0c-a227-830cd6defd57">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://frankfurt-postgres.render.com:5432/sneakers_store</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

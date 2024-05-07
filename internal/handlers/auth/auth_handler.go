@@ -90,9 +90,6 @@ func LoginHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password", "details": err.Error()})
 		return
 	}
-	fmt.Println(body.Password)
-	fmt.Println(existingUser.Password)
-	fmt.Println(existingUser.Email)
 
 	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(body.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password", "details": err.Error()})

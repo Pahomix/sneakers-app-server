@@ -14,7 +14,7 @@ func ConnectDatabase() {
 	var err error
 
 	host := os.Getenv("HOST")
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	port, _ := strconv.Atoi(os.Getenv("PORT_DB"))
 	user := os.Getenv("USER_BD")
 	dbname := os.Getenv("DB_NAME")
 	pass := os.Getenv("PASSWORD")

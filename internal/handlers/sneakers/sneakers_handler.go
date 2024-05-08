@@ -9,7 +9,7 @@ import (
 
 func GetSneakersHandler(c *gin.Context) {
 	var sneakers []models.Sneaker
-	if err := db.Db.Find(&sneakers).Error; err != nil {
+	if err := db.Db.Preload("Sizes").Find(&sneakers).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

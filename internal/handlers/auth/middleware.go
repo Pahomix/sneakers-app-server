@@ -12,11 +12,19 @@ import (
 )
 
 func RequireAuth(c *gin.Context) {
-	tokenString, err := c.Cookie("Authorization")
+	tokenString := c.GetHeader("Authorization")
 
-	if err != nil {
+	if tokenString == "" {
 		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
+
+	if len(tokenString) < 7 || tokenString[:7] != "Bearer " {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	tokenString = tokenString[7:]
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -25,17 +33,21 @@ func RequireAuth(c *gin.Context) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			c.AbortWithStatus(http.StatusUnauthorized)
-		}
-		var user models.User
-		db.Db.Where("id = ?", claims["sub"]).First(&user)
-
-		c.Set("user", user)
-
-		c.Next()
-	} else {
+	if err != nil || !token.Valid {
 		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || float64(time.Now().Unix()) > claims["exp"].(float64) {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	var user models.User
+	db.Db.Where("id = ?", claims["sub"]).First(&user)
+
+	c.Set("user", user)
+
+	c.Next()
 }

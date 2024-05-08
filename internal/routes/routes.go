@@ -3,6 +3,9 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"sneakers-app/internal/handlers/auth"
+	"sneakers-app/internal/handlers/brand"
+	"sneakers-app/internal/handlers/category"
+	"sneakers-app/internal/handlers/promotion"
 	"sneakers-app/internal/handlers/review"
 	"sneakers-app/internal/handlers/size"
 	"sneakers-app/internal/handlers/sneakers"
@@ -47,5 +50,32 @@ func InitRoutes(routes *gin.Engine) {
 		userRoutes.POST("/", auth.RequireAuth, size.CreateSizeHandler)
 		userRoutes.PUT("/:id", auth.RequireAuth, size.UpdateSizeHandler)
 		userRoutes.DELETE("/:id", auth.RequireAuth, size.DeleteSizeHandler)
+	}
+
+	userRoutes = routes.Group("/promotions")
+	{
+		userRoutes.GET("/", auth.RequireAuth, promotion.GetPromotionsHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, promotion.GetPromotionHandler)
+		userRoutes.POST("/", auth.RequireAuth, promotion.CreatePromotionHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, promotion.UpdatePromotionHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, promotion.DeletePromotionHandler)
+	}
+
+	userRoutes = routes.Group("/brands")
+	{
+		userRoutes.GET("/", auth.RequireAuth, brand.GetBrandsHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, brand.GetBrandsHandler)
+		userRoutes.POST("/", auth.RequireAuth, brand.CreateBrandHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, brand.UpdateBrandHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, brand.DeleteBrandHandler)
+	}
+
+	userRoutes = routes.Group("/categories")
+	{
+		userRoutes.GET("/", auth.RequireAuth, category.GetCategoriesHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, category.GetCategoriesHandler)
+		userRoutes.POST("/", auth.RequireAuth, category.CreateCategoryHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, category.UpdateCategoryHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, category.DeleteCategoryHandler)
 	}
 }

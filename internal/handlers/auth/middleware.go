@@ -12,7 +12,18 @@ import (
 )
 
 func RequireAuth(c *gin.Context) {
+	// Check for token in header
 	tokenString := c.GetHeader("Authorization")
+
+	// If token not present in header, try to extract from cookie
+	if tokenString == "" {
+		cookie, err := c.Cookie("Authorization")
+		if err != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		tokenString = cookie
+	}
 
 	if tokenString == "" {
 		c.AbortWithStatus(http.StatusUnauthorized)

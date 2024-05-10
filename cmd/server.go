@@ -31,12 +31,12 @@ func main() {
 	//route.Use(cors.New(config))
 	route.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowCredentials: true,
 		AllowHeaders: []string{"Content-Type", "Authorization", "Content-Length", "Accept-Encoding", "X-CSRF-Token",
 			"accept", "origin", "Cache-Control", "X-Requested-With",
 			"Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "x-auth-token", "Access-Control-Allow-Headers",
-			"token"},
+			"token", ""},
 		MaxAge: 12 * time.Hour,
 	}))
 

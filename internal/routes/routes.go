@@ -5,9 +5,9 @@ import (
 	"sneakers-app/internal/handlers/auth"
 	"sneakers-app/internal/handlers/brand"
 	"sneakers-app/internal/handlers/category"
+	"sneakers-app/internal/handlers/order"
 	"sneakers-app/internal/handlers/promotion"
 	"sneakers-app/internal/handlers/review"
-	"sneakers-app/internal/handlers/size"
 	"sneakers-app/internal/handlers/sneakers"
 	"sneakers-app/internal/handlers/user"
 )
@@ -23,6 +23,8 @@ func InitRoutes(routes *gin.Engine) {
 		userRoutes.POST("/", auth.RequireAuth, user.CreateUser)
 		userRoutes.PUT("/:id", auth.RequireAuth, user.UpdateUser)
 		userRoutes.DELETE("/:id", auth.RequireAuth, user.DeleteUser)
+		userRoutes.PATCH("/restore/:id", auth.RequireAuth, user.RestoreUser)
+
 	}
 
 	userRoutes = routes.Group("/sneakers")
@@ -43,14 +45,14 @@ func InitRoutes(routes *gin.Engine) {
 		userRoutes.DELETE("/:id", auth.RequireAuth, review.DeleteReviewHandler)
 	}
 
-	userRoutes = routes.Group("/sizes")
-	{
-		userRoutes.GET("/", auth.RequireAuth, size.GetSizesHandler)
-		userRoutes.GET("/:id", auth.RequireAuth, size.GetSizeHandler)
-		userRoutes.POST("/", auth.RequireAuth, size.CreateSizeHandler)
-		userRoutes.PUT("/:id", auth.RequireAuth, size.UpdateSizeHandler)
-		userRoutes.DELETE("/:id", auth.RequireAuth, size.DeleteSizeHandler)
-	}
+	//userRoutes = routes.Group("/sizes")
+	//{
+	//	userRoutes.GET("/", auth.RequireAuth, size.GetSizesHandler)
+	//	userRoutes.GET("/:id", auth.RequireAuth, size.GetSizeHandler)
+	//	userRoutes.POST("/", auth.RequireAuth, size.CreateSizeHandler)
+	//	userRoutes.PUT("/:id", auth.RequireAuth, size.UpdateSizeHandler)
+	//	userRoutes.DELETE("/:id", auth.RequireAuth, size.DeleteSizeHandler)
+	//}
 
 	userRoutes = routes.Group("/promotions")
 	{
@@ -73,9 +75,18 @@ func InitRoutes(routes *gin.Engine) {
 	userRoutes = routes.Group("/categories")
 	{
 		userRoutes.GET("/", auth.RequireAuth, category.GetCategoriesHandler)
-		userRoutes.GET("/:id", auth.RequireAuth, category.GetCategoriesHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, category.GetCategoryHandler)
 		userRoutes.POST("/", auth.RequireAuth, category.CreateCategoryHandler)
 		userRoutes.PUT("/:id", auth.RequireAuth, category.UpdateCategoryHandler)
 		userRoutes.DELETE("/:id", auth.RequireAuth, category.DeleteCategoryHandler)
+	}
+
+	userRoutes = routes.Group("/orders")
+	{
+		userRoutes.POST("/", auth.RequireAuth, order.CreateOrderHandler)
+		userRoutes.PUT("/:id", auth.RequireAuth, order.UpdateOrderHandler)
+		userRoutes.DELETE("/:id", auth.RequireAuth, order.DeleteOrderHandler)
+		userRoutes.GET("/", auth.RequireAuth, order.GetOrdersHandler)
+		userRoutes.GET("/:id", auth.RequireAuth, order.GetOrderHandler)
 	}
 }

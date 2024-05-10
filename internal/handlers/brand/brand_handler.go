@@ -9,7 +9,7 @@ import (
 
 func GetBrandsHandler(c *gin.Context) {
 	var brands []models.Brand
-	if err := db.Db.Find(&brands).Error; err != nil {
+	if err := db.Db.Unscoped().Find(&brands).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

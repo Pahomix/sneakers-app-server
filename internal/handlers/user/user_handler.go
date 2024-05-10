@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,30 +13,41 @@ import (
 
 func CreateUser(c *gin.Context) {
 	var user models.User
+
+	file, err := c.FormFile("photo")
+	if err != nil {
+		if user.UserPhoto != nil {
+			os.Remove("../media/" + *user.UserPhoto)
+		}
+
+		var photoFIleName string
+		if file != nil {
+			uuidFileName := uuid.New().String()
+			extension := filepath.Ext(file.Filename)
+			photoFIleName = uuidFileName + extension
+
+			if err := c.SaveUploadedFile(file, "../media/"+photoFIleName); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			user.UserPhoto = &photoFIleName
+		}
+	}
+
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	file, err := c.FormFile("photo")
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to hash password"})
 		return
 	}
-
-	uuidFileName := uuid.New().String()
-	extension := filepath.Ext(file.Filename)
-	photoFileName := uuidFileName + extension
-
-	if err := c.SaveUploadedFile(file, "../media/"+photoFileName); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	user.UserPhoto = &photoFileName
+	user.Password = string(hashedPassword)
 
 	if err := db.Db.Create(&user).Error; err != nil {
-		os.Remove("../media/" + photoFileName)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -45,7 +57,7 @@ func CreateUser(c *gin.Context) {
 
 func GetUserById(c *gin.Context) {
 	var user models.User
-	if err := db.Db.Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
+	if err := db.Db.Unscoped().Where("id = ?", c.Param("id")).First(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -54,7 +66,7 @@ func GetUserById(c *gin.Context) {
 
 func GetUsers(c *gin.Context) {
 	var users []models.User
-	if err := db.Db.Find(&users).Error; err != nil {
+	if err := db.Db.Unscoped().Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -63,6 +75,7 @@ func GetUsers(c *gin.Context) {
 
 func UpdateUser(c *gin.Context) {
 	var user models.User
+
 	if err := db.Db.First(&user, c.Param("id")).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -74,22 +87,32 @@ func UpdateUser(c *gin.Context) {
 			os.Remove("../media/" + *user.UserPhoto)
 		}
 
-		uuidFileName := uuid.New().String()
-		extension := filepath.Ext(file.Filename)
-		photoFIleName := uuidFileName + extension
+		var photoFIleName string
+		if file != nil {
+			uuidFileName := uuid.New().String()
+			extension := filepath.Ext(file.Filename)
+			photoFIleName = uuidFileName + extension
 
-		if err := c.SaveUploadedFile(file, "../media/"+photoFIleName); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			if err := c.SaveUploadedFile(file, "../media/"+photoFIleName); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			user.UserPhoto = &photoFIleName
 		}
-
-		user.UserPhoto = &photoFIleName
 	}
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to hash password"})
+		return
+	}
+	user.Password = string(hashedPassword)
 
 	if err := db.Db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -116,4 +139,40 @@ func DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+}
+
+func RestoreUser(c *gin.Context) {
+	var user models.User
+	userID := c.Param("id")
+
+	// Проверяем, существует ли пользователь с указанным ID
+	if err := db.Db.Unscoped().First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Проверяем, был ли пользователь удален (поле deleted_at не пустое)
+	if !user.DeletedAt.Valid {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not deleted"})
+		return
+	}
+
+	// Если пользователь был удален, сбрасываем поле deleted_at
+	if err := db.Db.Model(&user).Update("deleted_at", nil).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User restored successfully"})
+}
+
+func GetMaxUserId(c *gin.Context) {
+	var maxId int
+
+	if err := db.Db.Model(&models.User{}).Select("MAX(id)").Scan(&maxId).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"maxId": maxId})
 }

@@ -9,7 +9,7 @@ import (
 
 func GetCategoriesHandler(c *gin.Context) {
 	var categories []models.Category
-	if err := db.Db.Find(&categories).Error; err != nil {
+	if err := db.Db.Unscoped().Find(&categories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
